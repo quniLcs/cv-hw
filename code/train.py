@@ -5,7 +5,6 @@ from predict import predict
 from backprop import backprop
 
 
-# noinspection PyTypeChecker
 def train(num_hidden, alpha, lambd):
     # Network Structure
     # Learning rate
