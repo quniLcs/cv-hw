@@ -53,14 +53,13 @@ def train(num_hidden, alpha, lambd):
             print('Training iteration = %d\tTraining error = %f\n', iter_cur, error[ind_record])
 
         # Stochastic Gradient Descend
-        index = int(np.random.rand() * num_train)
-        grad = backprop()
+        ind_train = int(np.random.rand() * num_train)
+        grad = backprop(weight, x_train[ind_train, :], y_train[ind_train], num_layer)
 
         # L2 Regularization
         for ind_layer in range(num_layer + 1):
             weight[ind_layer] = weight[ind_layer] - \
                                 alpha[iter_cur] * (grad + lambd * weight[ind_layer])
-
 
     # Model saving
 
