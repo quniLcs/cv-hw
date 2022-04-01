@@ -2,16 +2,14 @@ import numpy as np
 
 
 def predict(weight, x, num_layer):
-    (num, dim) = x.shape
+    (num, _) = x.shape
 
-    net_activation = []
-    activation = []
     y_pred = []
 
     # ReLU activation function
     for ind in range(num):
-        net_activation.append(np.matmul(np.hstack((x[ind, :], 1)), weight[0]))
-        activation.append(np.hstack((net_activation[0] * (net_activation[0] > 0), 1)))
+        net_activation = [np.matmul(np.hstack((x[ind, :], 1)), weight[0])]
+        activation = [np.hstack((net_activation[0] * (net_activation[0] > 0), 1))]
         for ind_layer in range(1, num_layer):
             net_activation.append(np.matmul(activation[ind_layer - 1], weight[ind_layer]))
             activation.append(np.hstack((net_activation[ind_layer] * (net_activation[ind_layer] > 0), 1)))
