@@ -1,9 +1,12 @@
+import pickle
 import tensorflow as tf
 import numpy as np
-from numpy import linalg as LA
-
-import pickle
-# with reference to: https://blog.csdn.net/jining11/article/details/81435899
+import warnings
+# with reference to:
+# https://github.com/DWB1115
+# https://blog.csdn.net/c976718017/article/details/79879496
+# https://blog.csdn.net/jining11/article/details/81435899
+# https://blog.csdn.net/jzz3933/article/details/84935205
 
 from predict import predict
 from backprop import backprop
@@ -15,21 +18,21 @@ def train(num_hidden, alpha, lambd):
     # Regularization parameter
 
     np.random.seed(0)
+    warnings.filterwarnings('ignore')
 
-    (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+    (x_train, y_train), (_, _) = tf.keras.datasets.mnist.load_data()
     assert x_train.shape == (60000, 28, 28)
-    assert x_test.shape == (10000, 28, 28)
     assert y_train.shape == (60000,)
-    assert y_test.shape == (10000,)
-    del x_test, y_test
     x_train = np.reshape(x_train, (60000, 28 * 28))
+
     mean = np.mean(x_train, axis = 0)
-    var = LA.norm(x_train, axis = 0)
-    with open('mean', 'wb') as file:
+    std = [std if std > 1e-6 else 1 for std in np.std(x_train, axis = 0)]
+    x_train = (x_train - mean) / std
+
+    with open('mean.dat', 'wb') as file:
         pickle.dump(mean, file)
-    with open('variance', 'wb') as file:
-        pickle.dump(var, file)
-    x_train = (x_train - mean) / (var + 1e-6)
+    with open('std.dat', 'wb') as file:
+        pickle.dump(std, file)
 
     num_train = 60000
     num_label = 10
@@ -42,44 +45,42 @@ def train(num_hidden, alpha, lambd):
 
     y_expanded = np.zeros((num_train, num_label))
     for i_train in range(num_train):
-        y_expanded[i_train, y_train[i_train]] = 1
+        y_expanded[i_train, y_train[i_train] % 10] = 1
 
-    weight = [np.random.rand(dim + 1, num_hidden[0])]
+    weight = [np.random.randn(dim + 1, num_hidden[0])]
     for ind_layer in range(1, num_layer):
-        weight.append(np.random.rand(num_hidden[ind_layer - 1] + 1, num_hidden[ind_layer]))
-    weight.append(np.random.rand(num_hidden[num_layer - 1] + 1, num_label))
+        weight.append(np.random.randn(num_hidden[ind_layer - 1] + 1, num_hidden[ind_layer]))
+    weight.append(np.random.randn(num_hidden[num_layer - 1] + 1, num_label))
 
     error = [0 for _ in range(iter_record)]
 
-    # cosine learning rate decay
+    # Cosine learning rate decay
     alpha = [alpha * np.cos(iter_cur / iter_max * np.pi / 2) for iter_cur in range(iter_max)]
 
     for iter_cur in range(iter_max):
         if iter_cur % iter_step == 0:
             ind_record = iter_cur // iter_step
             y_pred = predict(weight, x_train, num_layer)
-            error[ind_record] = \
-                sum([y_pred[i_train] != y_train[i_train] for i_train in range(num_train)]) / num_train
-            print('Training iteration = %d\tTraining error = %f\n' % (iter_cur, error[ind_record]))
+            error[ind_record] = sum([y_pred[i_train] != y_train[i_train] for i_train in range(num_train)]) / num_train
+            print('Training iteration = %d\tTraining error = %f' % (iter_cur, error[ind_record]))
 
         # Stochastic Gradient Descend
         ind_train = int(np.random.rand() * num_train)
         grad = backprop(weight,
                         x_train[ind_train: ind_train + 1, :],
                         y_expanded[ind_train: ind_train + 1, :],
-                        num_layer)
+                        num_layer, num_label)
 
         # L2 Regularization
         for ind_layer in range(num_layer + 1):
-            weight[ind_layer] = weight[ind_layer] - \
-                                alpha[iter_cur] * (grad[ind_layer] + lambd * weight[ind_layer])
+            weight[ind_layer] = weight[ind_layer] - alpha[iter_cur] * (grad[ind_layer] + lambd * weight[ind_layer])
 
     # Model saving
     filename = 'Model weights with num_hidden ' + str(num_hidden) + \
-               ', alpha = ' + alpha + ', lambda = ' + lambd
+               ', alpha = ' + str(alpha[0]) + ', lambda = ' + str(lambd)
     with open(filename, 'wb') as file:
         pickle.dump(weight, file)
 
 
 if __name__ == "__main__":
-    train([120, 84], 1e-3, 0.05)
+    train([100], 1e-3, 0.05)
