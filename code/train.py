@@ -1,5 +1,9 @@
 import tensorflow as tf
 import numpy as np
+from numpy import linalg as LA
+
+import pickle
+# with reference to: https://blog.csdn.net/jining11/article/details/81435899
 
 from predict import predict
 from backprop import backprop
@@ -19,6 +23,13 @@ def train(num_hidden, alpha, lambd):
     assert y_test.shape == (10000,)
     del x_test, y_test
     x_train = np.reshape(x_train, (60000, 28 * 28))
+    mean = np.mean(x_train, axis = 0)
+    var = LA.norm(x_train, axis = 0)
+    with open('mean', 'wb') as file:
+        pickle.dump(mean, file)
+    with open('variance', 'wb') as file:
+        pickle.dump(var, file)
+    x_train = (x_train - mean) / (var + 1e-6)
 
     num_train = 60000
     num_label = 10
@@ -49,18 +60,25 @@ def train(num_hidden, alpha, lambd):
             y_pred = predict(weight, x_train, num_layer)
             error[ind_record] = \
                 sum([y_pred[i_train] != y_train[i_train] for i_train in range(num_train)]) / num_train
-            print('Training iteration = %d\tTraining error = %f\n', iter_cur, error[ind_record])
+            print('Training iteration = %d\tTraining error = %f\n' % (iter_cur, error[ind_record]))
 
         # Stochastic Gradient Descend
         ind_train = int(np.random.rand() * num_train)
-        grad = backprop(weight, x_train[ind_train, :], y_train[ind_train], num_layer)
+        grad = backprop(weight,
+                        x_train[ind_train: ind_train + 1, :],
+                        y_expanded[ind_train: ind_train + 1, :],
+                        num_layer)
 
         # L2 Regularization
         for ind_layer in range(num_layer + 1):
             weight[ind_layer] = weight[ind_layer] - \
-                                alpha[iter_cur] * (grad + lambd * weight[ind_layer])
+                                alpha[iter_cur] * (grad[ind_layer] + lambd * weight[ind_layer])
 
     # Model saving
+    filename = 'Model weights with num_hidden ' + str(num_hidden) + \
+               ', alpha = ' + alpha + ', lambda = ' + lambd
+    with open(filename, 'wb') as file:
+        pickle.dump(weight, file)
 
 
 if __name__ == "__main__":
