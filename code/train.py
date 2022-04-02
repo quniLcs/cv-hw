@@ -7,6 +7,8 @@ import warnings
 # https://blog.csdn.net/c976718017/article/details/79879496
 # https://blog.csdn.net/jzz3933/article/details/84935205
 # https://blog.csdn.net/jining11/article/details/81435899
+# https://blog.csdn.net/graceful_snow/article/details/105187474
+# https://blog.csdn.net/lly1122334/article/details/90647962
 
 from predict import predict
 from backprop import backprop
