@@ -4,7 +4,7 @@
 GitHub repo
 链接：[https://github.com/quniLcs/cv-nnc](https://github.com/quniLcs/cv-nnc)
 
-模型网盘链接：[百度网盘
+网盘链接：[百度网盘
 神经网络分类器](https://pan.baidu.com/s/1hQtjDPMmQEPDIk5TRP6MwA?pwd=6bku)
 
 使用模块说明
