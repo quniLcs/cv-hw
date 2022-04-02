@@ -1,12 +1,12 @@
-import pickle
 import tensorflow as tf
 import numpy as np
+import pickle
 import warnings
 # with reference to:
 # https://github.com/DWB1115
 # https://blog.csdn.net/c976718017/article/details/79879496
-# https://blog.csdn.net/jining11/article/details/81435899
 # https://blog.csdn.net/jzz3933/article/details/84935205
+# https://blog.csdn.net/jining11/article/details/81435899
 
 from predict import predict
 from backprop import backprop
@@ -29,10 +29,10 @@ def train(num_hidden, alpha, lambd):
     std = [std if std > 1e-6 else 1 for std in np.std(x_train, axis = 0)]
     x_train = (x_train - mean) / std
 
-    with open('mean.dat', 'wb') as file:
-        pickle.dump(mean, file)
-    with open('std.dat', 'wb') as file:
-        pickle.dump(std, file)
+    with open('mean.dat', 'wb') as file_pointer:
+        pickle.dump(mean, file_pointer)
+    with open('std.dat', 'wb') as file_pointer:
+        pickle.dump(std, file_pointer)
 
     num_train = 60000
     num_label = 10
@@ -76,10 +76,12 @@ def train(num_hidden, alpha, lambd):
             weight[ind_layer] = weight[ind_layer] - alpha[iter_cur] * (grad[ind_layer] + lambd * weight[ind_layer])
 
     # Model saving
-    filename = 'Model weights with num_hidden ' + str(num_hidden) + \
-               ', alpha = ' + str(alpha[0]) + ', lambda = ' + str(lambd)
-    with open(filename, 'wb') as file:
-        pickle.dump(weight, file)
+    file_name = 'model weights with num_hidden ' + str(num_hidden) + \
+               ', alpha = ' + str(alpha[0]) + ', lambda = ' + str(lambd) + '.dat'
+    with open(file_name, 'wb') as file_pointer:
+        pickle.dump(weight, file_pointer)
+
+    return error
 
 
 if __name__ == "__main__":
