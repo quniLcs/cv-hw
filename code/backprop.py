@@ -1,5 +1,4 @@
 import numpy as np
-from math import isnan
 
 
 def backprop(weight, x, y, num_layer, num_label):
@@ -8,6 +7,7 @@ def backprop(weight, x, y, num_layer, num_label):
     grad = [np.zeros(weight[ind_layer].shape) for ind_layer in range(num_layer + 1)]
 
     for ind in range(num):
+        # ReLU activation function
         net_activation = [np.matmul(np.hstack((x[ind: ind + 1, :], [[1]])), weight[0])]
         activation = [np.hstack((net_activation[0] * (net_activation[0] > 0), [[1]]))]
         for ind_layer in range(1, num_layer):
@@ -16,20 +16,19 @@ def backprop(weight, x, y, num_layer, num_label):
         net_activation.append(np.matmul(activation[num_layer - 1], weight[num_layer]))
         # Cross entropy loss function
         softmax = np.exp(net_activation[num_layer]) / np.sum(np.exp(net_activation[num_layer]))
-
         for ind_label in range(num_label):
-            if isnan(softmax[0, ind_label]):
+            if np.isnan(softmax[0, ind_label]):
                 break
         else:
             # output layer
             error = softmax - y[ind: ind + 1, :]
-            grad[num_layer] = grad[num_layer] + np.multiply(np.transpose(activation[num_layer - 1]), error)
-            error = (net_activation[num_layer - 1] > 0) * np.matmul(error, weight[num_layer][:-1, :].T)
+            grad[num_layer] += np.matmul(np.transpose(activation[num_layer - 1]), error)
+            error = (net_activation[num_layer - 1] > 0) * np.matmul(error, np.transpose(weight[num_layer][:-1, :]))
             # hidden layers
             for ind_layer in range(num_layer - 1, 0, -1):
-                grad[ind_layer] = grad[ind_layer] + np.multiply(np.transpose(activation[ind_layer - 1]), error)
-                error = (net_activation[ind_layer - 1] > 0) * np.matmul(error, weight[ind_layer][:-1, :].T)
+                grad[ind_layer] += np.matmul(np.transpose(activation[ind_layer - 1]), error)
+                error = (net_activation[ind_layer - 1] > 0) * np.matmul(error, np.transpose(weight[ind_layer][:-1, :]))
             # input layer
-            grad[0] = grad[0] + np.multiply(np.transpose(np.hstack((x[ind: ind + 1, :], [[1]]))), error)
+            grad[0] += np.matmul(np.transpose(np.hstack((x[ind: ind + 1, :], [[1]]))), error)
 
     return grad
